@@ -1,0 +1,45 @@
+# Maven
+target/
+*.class
+*.jar
+*.war
+*.nar
+*.zip
+*.tar.gz
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Spring Boot
+application-*.properties
+application-*.yml
+spring-boot-devtools.properties
+
+# Sensitive files
+application.properties
+src/main/resources/application.properties
+
+# Logs
+logs/
+*.log

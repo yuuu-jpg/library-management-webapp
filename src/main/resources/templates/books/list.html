@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>書籍一覧・検索 - 図書館管理システム</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background-color: #2c3e50;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .navbar .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: white;
+        }
+        .navbar a {
+            color: #ecf0f1 !important;
+            margin-left: 20px;
+        }
+        .navbar a:hover {
+            color: #3498db !important;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-top: 30px;
+            padding: 30px;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        .search-box {
+            background-color: #ecf0f1;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+        .available {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .borrowed {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        table {
+            font-size: 0.95rem;
+        }
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+        .footer {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            text-align: center;
+            padding: 20px;
+            margin-top: 50px;
+        }
+    </style>
+</head>
+<body>
+    <!-- ナビゲーションバー -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">📚 図書館管理システム</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav">
+                    <a class="nav-link active" href="/books">書籍一覧</a>
+                    <a class="nav-link" href="/members">会員一覧</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- メインコンテンツ -->
+    <div class="container">
+        <h1>📖 書籍検索・一覧</h1>
+
+        <!-- 検索フォーム -->
+        <div class="search-box">
+            <form method="get" action="/books" class="row g-3">
+                <div class="col-md-3">
+                    <label for="genre" class="form-label">ジャンル</label>
+                    <select name="genre" id="genre" class="form-select">
+                        <option value="">すべて</option>
+                        <option value="小説" th:selected="${selectedGenre == '小説'}">小説</option>
+                        <option value="SF" th:selected="${selectedGenre == 'SF'}">SF</option>
+                        <option value="技術書" th:selected="${selectedGenre == '技術書'}">技術書</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="year" class="form-label">出版年</label>
+                    <select name="year" id="year" class="form-select">
+                        <option value="0">すべて</option>
+                        <option value="2000" th:selected="${selectedYear == 2000}">2000年以降（2000〜2009）</option>
+                        <option value="2010" th:selected="${selectedYear == 2010}">2010年以降（2010〜2019）</option>
+                        <option value="2020" th:selected="${selectedYear == 2020}">2020年以降（2020〜現在）</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="status" class="form-label">在庫状況</label>
+                    <select name="status" id="status" class="form-select">
+                        <option value="all" th:selected="${selectedStatus == 'all'}">すべて</option>
+                        <option value="available" th:selected="${selectedStatus == 'available'}">貸出可</option>
+                        <option value="borrowed" th:selected="${selectedStatus == 'borrowed'}">貸出中</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">&nbsp;</label>
+                    <button type="submit" class="btn btn-primary w-100">🔍 検索</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 書籍一覧テーブル -->
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>タイトル</th>
+                        <th>ジャンル</th>
+                        <th>出版年</th>
+                        <th>状態</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="book : ${books}">
+                        <td>
+                            <a th:href="@{/books/{id}(id=${book.bookId})}" 
+                               th:text="${book.title}"
+                               style="text-decoration: none; color: #3498db; font-weight: 500;"></a>
+                        </td>
+                        <td th:text="${book.genre}"></td>
+                        <td th:text="${book.publishedYear}"></td>
+                        <td>
+                            <!-- 貸出状況を判定 -->
+                                <span th:if="${loanService.getCurrentLoansByBookId(book.bookId).isEmpty()}" 
+                                  class="available">✓ 貸出可</span>
+                                <span th:unless="${loanService.getCurrentLoansByBookId(book.bookId).isEmpty()}"
+                                  class="borrowed">✗ 貸出中</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${books.isEmpty()}">
+                        <td colspan="4" class="text-center text-muted py-3">
+                            検索結果がありません
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- フッター -->
+    <footer class="footer">
+        <p>&copy; 2024 図書館管理システム - Java + Spring Boot + PostgreSQL</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
